@@ -1,0 +1,57 @@
+<%-- any content can be specified here e.g.: --%>
+<%@page import="br.edu.fatecpg.web.DbListener"%>
+<%@page import="br.edu.fatecpg.db.User"%>
+<%@ page pageEncoding="UTF-8" %>
+<% 
+    String headerError = null;
+    if(request.getParameter("session.login") != null) {
+        String login = request.getParameter("user.login");
+        String password = request.getParameter("user.password");
+        
+        try{
+            User loginUser = User.getUser(login, password);
+            if(loginUser == null) {
+                headerError = "Login ou password incorreto(s)!";
+            } else {
+                session.setAttribute("user.login", loginUser.getLogin());
+                session.setAttribute("user.nome", loginUser.getNome());
+                response.sendRedirect(request.getRequestURI());
+            }
+        } catch(Exception ex) {
+            headerError = ex.getMessage();
+        }
+    } else if(request.getParameter("session.logout") != null) {
+        session.removeAttribute("user.login");
+        session.removeAttribute("user.nome");
+        response.sendRedirect(request.getRequestURI());
+    }
+%>
+<% if(DbListener.exception != null) { %> 
+    <div style="color: red">
+        Um erro ocorreu no passo '<%= DbListener.step %>' 
+        : <%= DbListener.exception.getMessage() %>
+    </div>
+<% } %> 
+<% if(headerError != null) { %> 
+    <div style="color: red">
+        Erro no processamento do login/logout 
+        : <%= headerError %>
+    </div>
+<% } %> 
+<% if(session.getAttribute("user.login") == null) { %>
+    <form method="post">
+        Usuário: <input type="text" name="user.login"/>
+        Password: <input type="password" name="user.password"/>
+        <input type="submit" name="session.login" value="Entrar">
+    </form>
+<% } else { %>
+    <form method="post">
+        Bem vindo, <b>
+            <%= session.getAttribute("user.nome") %></            
+        </b>
+        <input type="submit" name="session.logout" value="Sair">
+        <a href="index.jsp">Início</a>
+        - <a href="disciplinas.jsp">Disciplinas</a>
+    </form>
+<% } %>
+<hr>
